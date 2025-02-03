@@ -1,10 +1,10 @@
 import time
 import numpy as np
-
-# Importa i moduli interni
 from envs.maze import create_maze_env, get_maze, get_maze_dimensions
 from utils.conversion import cont_to_disc, disc_to_cont
 from algorithms.astar import astar
+from algorithms.uniform_cost import uniform_cost_search
+from algorithms.dijkstra import dijkstra
 from controllers.pd_controller import PDController
 import config
 
@@ -13,14 +13,15 @@ def main():
     env, observation, _ = create_maze_env(
         render_mode=config.ENV_RENDER_MODE,
         width=config.ENV_WIDTH,
-        height=config.ENV_HEIGHT,
-        seed=config.ENV_SEED
+        height=config.ENV_HEIGHT
     )
     
     # Recupera la mappa e le sue dimensioni
     maze = get_maze()
     rows, cols = get_maze_dimensions(maze)
     
+    print("Dimensioni del labirinto (righe, colonne):", rows, cols)
+
     # Ottieni le posizioni continue dall'osservazione
     agent_cont = observation["observation"][:2]
     goal_cont = observation["desired_goal"]
@@ -33,15 +34,19 @@ def main():
     print("Cella goal (i, j):", goal_disc)
     
     # Calcola il percorso con A*
-    path = astar(maze, agent_disc, goal_disc, rows, cols)
-    if path is None:
+    path_astar = astar(maze, agent_disc, goal_disc, rows, cols)
+    path_uniform = uniform_cost_search(maze, agent_disc, goal_disc, rows, cols)
+    path_dijkstra = dijkstra(maze, agent_disc, goal_disc, rows, cols)
+    if path_astar is None:
         print("Nessun percorso trovato!")
         env.close()
         return
     
-    print("Percorso trovato (celle discrete):", path)
+    print("Percorso trovato (celle discrete, A*):", path_astar)
+    print("Percorso trovato (celle discrete, Uniform Cost):", path_uniform)
+    print("Percorso trovato (celle discrete, Dijkstra):", path_dijkstra)
     # Converte il percorso in coordinate continue
-    continuous_path = [disc_to_cont(i, j, rows, cols) for (i, j) in path]
+    continuous_path = [disc_to_cont(i, j, rows, cols) for (i, j) in path_astar]
     print("Percorso in coordinate continue:", continuous_path)
     
     # Per un movimento più preciso, usiamo i waypoint intermedi e il goal osservato
@@ -53,7 +58,7 @@ def main():
     controller = PDController(Kp=config.KP, Kd=config.KD, threshold=config.THRESHOLD, dt=config.DT)
     
     current_waypoint_idx = 0
-    max_steps = 2000
+    max_steps = 200000
     step = 0
     
     while step < max_steps:
@@ -81,10 +86,8 @@ def main():
             continue
         
         observation, reward, terminated, truncated, _ = env.step(action)
-        if terminated or truncated:
+        if terminated:
             observation, _ = env.reset()
-        
-        time.sleep(config.DT)
     
     env.close()
 

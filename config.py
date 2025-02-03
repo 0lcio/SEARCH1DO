@@ -2,8 +2,8 @@
 
 # Parametri per l'environment
 ENV_RENDER_MODE = "human"
-ENV_WIDTH = 1920
-ENV_HEIGHT = 1080
+ENV_WIDTH = 1440
+ENV_HEIGHT = 900
 ENV_SEED = 1
 
 # Parametri del controllore
