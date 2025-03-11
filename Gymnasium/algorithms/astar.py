@@ -10,7 +10,7 @@ def astar(maze, start, goal, rows, cols):
     heapq.heappush(open_list, (heuristic(start, goal), 0, start, None))
     came_from = {}
     cost_so_far = {start: 0}
-    nodes_expanded = 0  # count of expanded nodes
+    nodes_expanded = 0
 
     while open_list:
         f, cost, current, parent = heapq.heappop(open_list)
