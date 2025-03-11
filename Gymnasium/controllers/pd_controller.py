@@ -1,5 +1,7 @@
 import numpy as np
 
+# Controllore proporzionale-derivativo per il movimento dell'agente
+
 class PDController:
     def __init__(self, Kp=1.0, Kd=0.2, threshold=0.3, dt=0.01):
         self.Kp = Kp
